@@ -1,7 +1,5 @@
 package hu.durfi.freecell.processor;
 
-import hu.durfi.logging.Disturb.DisturbType;
-
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.ListIterator;
