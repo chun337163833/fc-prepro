@@ -31,7 +31,7 @@ public class ProcessedGameData {
 	
 	public long duration = -1;
 	
-	public String disturbType;
+	public String disturbType = "unknown";
 	
 	public String log;
 	
