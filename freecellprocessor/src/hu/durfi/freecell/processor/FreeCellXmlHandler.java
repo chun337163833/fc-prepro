@@ -46,7 +46,7 @@ public class FreeCellXmlHandler extends DefaultHandler {
 	
 	private ProcessedGameData currentGame;
 	
-	private Stack<FcMoveShort> pastMoves = new Stack<FreeCellXmlHandler.FcMoveShort>();
+	private Stack<FcMoveShort> pastMoves = new Stack<FcMoveShort>();
 
 	
 	
@@ -232,7 +232,7 @@ public class FreeCellXmlHandler extends DefaultHandler {
 			currentGame.won = model.isWon();
 			
 			processedGames.add(currentGame);
-			pastMoves = new Stack<FreeCellXmlHandler.FcMoveShort>();
+			pastMoves = new Stack<FcMoveShort>();
 		}
 		currentTag = null;
 	}
@@ -325,21 +325,5 @@ public class FreeCellXmlHandler extends DefaultHandler {
 			}
 		}
 		
-	}
-	
-	public class FcMoveShort {
-		public FcMoveShort(char fromType, int fromNum, int numOfCards, char toType, int toNum) {
-			this.fromType = fromType;
-			this.fromNum = fromNum;
-			this.numberOfMovedCards = numOfCards;
-			this.toType = toType;
-			this.toNum = toNum;
-		}
-		
-		public char fromType;
-		public int fromNum;
-		public int numberOfMovedCards;
-		public char toType;
-		public int toNum;
 	}
 }

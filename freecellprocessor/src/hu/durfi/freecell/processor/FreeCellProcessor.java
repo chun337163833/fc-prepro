@@ -82,7 +82,46 @@ public class FreeCellProcessor {
 					}
 				} else {
 					// JSON part
+
+					FreeCellJsonHandler handler = new FreeCellJsonHandler(false);
+					File errorDir = new File(dir.getPath(), "error");
 					
+					// Write all pre-processed logs into one file? If this is false,
+					// a new .csv file is generated for every .m3w file.
+					// TODO: Set this with command line argument
+					boolean oneFile = true;
+					FileWriter oneWriter = new FileWriter(new File(dir, "output.csv"));
+					
+					File[] files = dir.listFiles(new FilenameFilter() {
+						public boolean accept(File dir, String name) {
+							return name.endsWith(".m3w");
+						}
+					});
+					
+					int numberOfFiles = files.length;
+					
+					for (int i = 0; i < files.length; i ++) {
+						File inFile = files[i];
+						System.out.println("Processing: " + inFile.getName() + " | " + (i+1) + "/" + numberOfFiles + ", (" + (((i+1) * 100) / numberOfFiles) + "%)");
+						try {
+							handler.parseFile(inFile);
+							FileWriter outFile = new FileWriter(inFile.getAbsolutePath() + ".csv");
+							PrintWriter out = new PrintWriter(outFile);
+							if (oneFile) {
+								out = new PrintWriter(oneWriter);
+							}
+							
+							while (!handler.processedGames.isEmpty()) {
+								out.println(handler.processedGames.poll().toString());
+							}
+							
+							out.close();
+						} catch (Exception ex) {
+							System.out.println("Error occured processing file: " + inFile.getName() + "! Moving file to \"error\" directory.");
+							ex.printStackTrace();
+							inFile.renameTo(new File(errorDir, inFile.getName()));
+						}
+					}
 				}
 			} 
 			/*
@@ -102,7 +141,12 @@ public class FreeCellProcessor {
 					}
 				} else {
 					// JSON part
-					
+					FreeCellJsonHandler handler = new FreeCellJsonHandler(true);
+					handler.parseFile(dir);
+
+					while (!handler.processedGames.isEmpty()) {
+						System.out.println(handler.processedGames.poll().toString());
+					}
 				}
 			}
 		} catch (Exception ex) {

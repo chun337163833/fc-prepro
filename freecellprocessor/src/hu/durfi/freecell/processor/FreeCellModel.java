@@ -1,11 +1,17 @@
 package hu.durfi.freecell.processor;
 
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Stack;
+
+import javax.print.attribute.HashAttributeSet;
+
+import org.json.simple.JSONArray;
 
 import hu.durfi.FreeCell.FoundationStack;
 import hu.durfi.FreeCell.ReserveStack;
 import hu.durfi.FreeCell.TableauStack;
+import hu.durfi.card.Card;
 import hu.durfi.card.ClassicCard;
 import hu.durfi.card.ClassicDeck;
 import hu.durfi.card.Suit;
@@ -28,6 +34,22 @@ public class FreeCellModel {
 	 */
 	public FoundationStack[] foundationStacks = new FoundationStack[numberOfFoundationStacks];
 	
+	public HashMap<String, ClassicCard> cards;
+	
+	public FreeCellModel() {
+		/*
+		 * Put all cards in a HashMap with their string representation
+		 * as key. The JSON contains these strings to represent the cards.
+		 */
+		cards = new HashMap<String, ClassicCard>();
+		eraseStacks();
+		ClassicDeck deck = new ClassicDeck(null);
+		deck.shuffle(0);
+		for (ClassicCard card : deck ) {
+			cards.put(card.toString(), card);
+		}
+	}
+	
 	public  void distributeCards(int seed) {
 		eraseStacks();
 		
@@ -41,6 +63,23 @@ public class FreeCellModel {
 			tableauStacks[i % tableauStacks.length].push(deck.pop());
 			i++;
 		}
+	}
+	
+	/**
+	 * Create the initial state of the board from the given JSON array.
+	 * This is to be used in the M3W-JS environment.
+	 * @param json
+	 */
+	public void createFromJSON(JSONArray board) {		
+		for (int i = 0; i < board.size(); i ++) {
+			JSONArray stack = (JSONArray)board.get(i);
+			for (int j = 0; j < stack.size(); j ++) {
+				String cardStr = stack.get(j).toString();
+				ClassicCard card = cards.get(cardStr);
+				tableauStacks[i].add(card);
+			}
+		}
+		
 	}
 	
 	/**
@@ -89,6 +128,31 @@ public class FreeCellModel {
 				tableauStacks[toNum].push(tmp.pop());
 			}
 		}
+	}
+	
+	/**
+	 * Do a move. Return FcShortMove to be used in the undo log.
+	 * @param from
+	 * @param cardStr
+	 * @param to
+	 * @throws Exception
+	 */
+	public FcMoveShort doMove(String from, String cardStr, String to) throws Exception {
+		char fromType = from.charAt(0);
+		int fromNum = from.charAt(1) - '0';
+		char toType = to.charAt(0);
+		int toNum = to.charAt(1) - '0';
+		int numOfCards = 0;
+		ClassicCard card = cards.get(cardStr);
+		if (fromType == 't') {
+			numOfCards = tableauStacks[fromNum].size() - tableauStacks[fromNum].indexOf(card);
+		} else if (fromType == 'r') {
+			numOfCards = reserveStacks[fromNum].size() - reserveStacks[fromNum].indexOf(card);
+		} else {
+			numOfCards = foundationStacks[fromNum].size() - foundationStacks[fromNum].indexOf(card);
+		}
+		doMove(fromType, fromNum, numOfCards, toType, toNum);
+		return new FcMoveShort(fromType, fromNum, numOfCards, toType, toNum);
 	}
 	
 	/**
