@@ -1,4 +1,4 @@
-package hu.durfi.freecell.processor;
+package hu.durfi.freecell;
 
 public class FcMoveShort {
 	public FcMoveShort(char fromType, int fromNum, int numOfCards, char toType, int toNum) {

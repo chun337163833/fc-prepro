@@ -1,4 +1,4 @@
-package hu.durfi.freecell.processor;
+package hu.durfi.freecell;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -70,7 +70,8 @@ public class FreeCellModel {
 	 * This is to be used in the M3W-JS environment.
 	 * @param json
 	 */
-	public void createFromJSON(JSONArray board) {		
+	public void createFromJSON(JSONArray board) {
+		eraseStacks();
 		for (int i = 0; i < board.size(); i ++) {
 			JSONArray stack = (JSONArray)board.get(i);
 			for (int j = 0; j < stack.size(); j ++) {

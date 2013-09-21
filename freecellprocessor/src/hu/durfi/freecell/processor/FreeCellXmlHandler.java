@@ -2,6 +2,8 @@ package hu.durfi.freecell.processor;
 
 import hu.durfi.FreeCell.FoundationStack;
 import hu.durfi.card.Suit;
+import hu.durfi.freecell.FcMoveShort;
+import hu.durfi.freecell.FreeCellModel;
 
 import java.util.LinkedList;
 import java.util.Stack;
