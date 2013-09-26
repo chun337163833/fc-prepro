@@ -1,5 +1,8 @@
 package hu.durfi.freecell.solver;
 
+import java.util.ArrayList;
+import java.util.Date;
+
 import org.json.simple.JSONArray;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -26,8 +29,27 @@ public class FcSolver {
 		FcState initialState = new FcState();
 		initialState.createFromJSON(board);
 		
-		System.out.println(initialState.boardToString());
-		initialState.getNextStates();
+		FcState currentState = initialState;
+		FcGreedySearchSpace sp = new FcGreedySearchSpace();
+		long startTime = (new Date()).getTime();
+		for (int i = 0; i < 10000; i ++) {
+			ArrayList<FcState> nextStates = currentState.getNextStates();
+			for (FcState state : nextStates) {
+				sp.putState(state);
+			}
+			currentState = (FcState)sp.getNextState();
+			System.out.println("Current("+i+") state is: ");
+			System.out.println(currentState.boardToEqString());
+			if (currentState.isWon()) {
+				System.out.println("Game won!");
+				break;
+			}
+		}
+		long endTime = (new Date()).getTime();
+		System.out.println("Time spent: " + (endTime - startTime)/1000 + "s");
+		
+		// System.out.println(initialState.boardToEqString());
+		// initialState.getNextStates();
 	}
 
 }

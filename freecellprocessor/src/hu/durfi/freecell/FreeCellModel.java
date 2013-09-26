@@ -1,5 +1,8 @@
 package hu.durfi.freecell;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Stack;
@@ -189,7 +192,7 @@ public class FreeCellModel {
 		StringBuffer board = new StringBuffer();
 		
 		for (int i = 0; i < reserveStacks.length; i ++) {
-			if (reserveStacks[i].getCard() != null) {
+			if (!reserveStacks[i].isEmpty()) {
 				board.append(reserveStacks[i].getCard().toStringVS()).append(" ");
 			} else {
 				board.append("__ ");
@@ -246,6 +249,111 @@ public class FreeCellModel {
 		return board.toString();
 	}
 	
+	/**
+	 * <p>Returns the current state of the board (the stacks) in 
+	 * a table form. This can be passed to FreeCell Java Solver
+	 * to solve. 
+	 * 
+	 * <p>This differs from boardToString by returning the same
+	 * string for equivalent boards (where only the order of stacks differ).
+	 * This is achieved by ordering the stacks by their first card.
+	 * @return
+	 */
+	public String boardToEqString() {
+		if (tableauStacks == null || foundationStacks == null || reserveStacks == null)
+			return "";
+		
+		StringBuffer board = new StringBuffer();
+		
+		/*
+		 * Free cells first:
+		 */
+		ArrayList<String> reserves = new ArrayList<>();
+		for (int i = 0; i < reserveStacks.length; i ++) {
+			if (!reserveStacks[i].isEmpty()) {
+				reserves.add(reserveStacks[i].getCard().toStringVS());
+			} else {
+				reserves.add("__");
+			}
+		}
+		Collections.sort(reserves);
+		for (String r : reserves) {
+			board.append(r).append(" ");
+		}
+		board.append(" ");
+		
+		/*
+		 * Foundations:
+		 */
+		LinkedList<Suit> foundationSuits = new LinkedList<Suit>();
+		foundationSuits.add(Suit.DIAMOND);
+		foundationSuits.add(Suit.HEART);
+		foundationSuits.add(Suit.CLUB);
+		foundationSuits.add(Suit.SPADE);
+		for (Suit suit : foundationSuits) {
+			boolean found = false;
+			for (int i = 0; i < foundationStacks.length; i ++) {
+				if (foundationStacks[i].getTopCard() != null && foundationStacks[i].getTopCard().getSuit() == suit) {
+					board.append(foundationStacks[i].getTopCard().toStringVS()).append(" ");
+					found = true;
+				}
+			}
+			if (!found) {
+				board.append("__ ");
+			}
+		}
+		board.setLength(board.length() - 1); // Trim the last space.
+		board.append("\n\n");
+		
+		/*
+		 * Tableau stacks
+		 */
+		// Create a list from the tableau stacks
+		ArrayList<TableauStack> tsList = new ArrayList<TableauStack>();
+		for (TableauStack ts : tableauStacks) {
+			tsList.add(ts);
+		}
+		// Sort that list
+		Collections.sort(tsList, new Comparator<TableauStack>() {
+			@Override
+			public int compare(TableauStack o1, TableauStack o2) {
+				// Sort by first card
+				String c1 = o1.isEmpty() ? "__" : o1.firstElement().toStringVS();
+				String c2 = o2.isEmpty() ? "__" : o2.firstElement().toStringVS();
+				return c1.compareTo(c2);
+			}
+		});
+		// Get the length of the longest stack:
+		int length = 0;
+		for (int i = 0; i < tableauStacks.length; i ++) {
+			if (tableauStacks[i].size() > length) {
+				length = tableauStacks[i].size();
+			}
+		}
+		
+		for (int index = 0; index < length; index ++) {
+			for (int i = 0; i < tsList.size(); i ++) {
+				if (tsList.get(i).size() > index) {
+					board.append(tsList.get(i).elementAt(index).toStringVS()).append(" ");
+				} else {
+					board.append("__ ");
+				}
+			}
+			
+			board.setLength(board.length() - 1);
+			if (index < length - 1)
+				board.append("\n");
+		}
+		
+		
+		return board.toString();
+	}
+	
+	/**
+	 * Is the game stored in this model an already won game? Game
+	 * is considered won, if all stacks are correctly ordered.
+	 * @return
+	 */
 	public boolean isWon() {
 		boolean won = true;
 		

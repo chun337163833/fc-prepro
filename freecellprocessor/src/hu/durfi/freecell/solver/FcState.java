@@ -25,20 +25,33 @@ public class FcState extends FreeCellModel implements State {
 		/*
 		 * Moves from the free cells
 		 */
-//		for (int i = 0; i < reserveStacks.length; i ++) {
-//			ReserveStack reserve = reserveStacks[i];
-//			if (reserve.isEmpty()) {
-//				continue;
-//			}
-//			ClassicCard card = reserve.getCard();
-//			for (int j = 0; j < foundationStacks.length; j ++) {
-//				FoundationStack foundation = foundationStacks[j];
-//				if (foundation.isValid(card)) {
-//					
-//				}
-//				TableauStack tableau = tableauStacks[0];
-//			}
-//		}
+		for (int i = 0; i < reserveStacks.length; i ++) {
+			ReserveStack from = reserveStacks[i];
+			if (from.isEmpty()) {
+				continue;
+			}
+			ClassicCard card = from.getCard();
+			/*
+			 * Move to foundations
+			 */
+			for (int j = 0; j < foundationStacks.length; j ++) {
+				FoundationStack to = foundationStacks[j];
+				if (to.isValid(card)) {
+					nextStates.add(afterMove(from, 1, to));
+				}
+			}
+			/*
+			 * Move to tableau stacks
+			 */
+			for (int j = 0; j < tableauStacks.length; j ++) {
+				TableauStack to = tableauStacks[j];
+				TableauStack dummy = new TableauStack();
+				dummy.push(card);
+				if (to.isValid(dummy)) {
+					nextStates.add(afterMove(from, 1, to));
+				}
+			}
+		}
 		/*
 		 * Moves from the tableau
 		 */
@@ -56,6 +69,7 @@ public class FcState extends FreeCellModel implements State {
 				 /*
 				  * Move to tableau stacks
 				  */
+				 // TODO: Check number of empty free cells before moving!
 				 for (int k = 0; k < tableauStacks.length; k ++) {
 					 TableauStack to = tableauStacks[k];
 					 // Skip same column (not really necessary)
@@ -65,10 +79,35 @@ public class FcState extends FreeCellModel implements State {
 					 
 					 if (to.isValid(dummy)) {
 						 nextStates.add(afterMove(from, numberOfCardsToMove, to));
-						 System.out.println(nextStates.get(nextStates.size()-1).boardToString());
 					 }
 				 }
 				 
+				 // If trying to move more than one card, don't even try
+				 // the free cells and the foundations
+				 if (numberOfCardsToMove > 1) {
+					 continue;
+				 }
+				 
+				 /*
+				  * Move to free cells
+				  */
+				 for (int k = 0; k < reserveStacks.length; k ++) {
+					 ReserveStack to = reserveStacks[k];
+					 // Checking if empty is enough now
+					 if (to.isEmpty()) {
+						 nextStates.add(afterMove(from, numberOfCardsToMove, to));
+					 }
+				 }
+				 
+				 /*
+				  * Move to foundations
+				  */
+				 for (int k = 0; k < foundationStacks.length; k ++) {
+					 FoundationStack to = foundationStacks[k];
+					 if (to.isValid(dummy)) {
+						 nextStates.add(afterMove(from, numberOfCardsToMove, to));
+					 }
+				 }
 			}
 		}
 		
@@ -112,7 +151,7 @@ public class FcState extends FreeCellModel implements State {
 			if (reserveStacks[i].isEmpty()) {
 				continue;
 			}
-			state.reserveStacks[i].add(reserveStacks[i].getCard());
+			state.reserveStacks[i].push(reserveStacks[i].getCard());
 		}
 		for (int i = 0; i < foundationStacks.length; i ++) {
 			for (int j = 0; j < foundationStacks[i].size(); j ++) {
@@ -136,6 +175,14 @@ public class FcState extends FreeCellModel implements State {
 	public Long getScore() {
 		// TODO Auto-generated method stub
 		return 0L;
+	}
+	
+	public Long getNumberOfCardsInFoundations() {
+		Long result = 0L;
+		for (int i = 0; i < foundationStacks.length; i ++) {
+			result += foundationStacks[i].size();
+		}
+		return result;
 	}
 
 }
