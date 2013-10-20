@@ -14,8 +14,34 @@ import java.util.Vector;
 
 public class FcState extends FreeCellModel implements State {
 
+	/**
+	 * Where did we get here from? This is updated if this state appears in
+	 * a shorter path.
+	 */
+	private FcState parent;
+	
+	/**
+	 * How did we get here from the parent state? This is the JSON representation
+	 * of the move. See Fclime for further details.
+	 * 
+	 * Example: {"code":202,"from":"t5","card":"SA","to":"r1","time":1382252373562}
+	 * ("code" and "time" are irrelevant here)
+	 */
+	private String transition;
+	
+	/**
+	 * Cost of getting to this state. This is set to 0 in the constructor
+	 * and set to the correct value, when adding the parent state (in setParent).
+	 */
+	private long cost = 0L;
+	
 	public FcState() {
 		super();
+	}
+	
+	public FcState(FcState parent) {
+		super();
+		this.parent = parent;
 	}
 	
 	@Override
@@ -69,14 +95,34 @@ public class FcState extends FreeCellModel implements State {
 				 /*
 				  * Move to tableau stacks
 				  */
-				 // TODO: Check number of empty free cells before moving!
 				 for (int k = 0; k < tableauStacks.length; k ++) {
 					 TableauStack to = tableauStacks[k];
 					 // Skip same column (not really necessary)
 					 if (i == k) {
 						 continue;
 					 }
-					 
+					 // Check number of empty free cells
+					 if (numberOfCardsToMove > 1) {
+							int freeReserve = 0;
+							int freeTableau = 0;
+							// Count empty reserved stacks
+							for (int l = 0; l < reserveStacks.length; l ++) {
+								if (reserveStacks[l].isEmpty()) {
+									freeReserve ++;
+								}
+							}
+							// Count empty tableau stacks (not including the 'from' and 'to' stacks).
+							for (int l = 0; l < tableauStacks.length; l ++) {
+								if (tableauStacks[l].isEmpty() && tableauStacks[l] != from && tableauStacks[l] != to) {
+									freeTableau ++;
+								}
+							}
+							int numberOfMovableCards = (1 + freeReserve) * (int)Math.pow(2, freeTableau);
+							// If not enough, continue!
+							if (numberOfMovableCards < numberOfCardsToMove) {
+								continue;
+							}
+					 }
 					 if (to.isValid(dummy)) {
 						 nextStates.add(afterMove(from, numberOfCardsToMove, to));
 					 }
@@ -136,6 +182,9 @@ public class FcState extends FreeCellModel implements State {
 		for (int i = 0; i < num; i ++) {
 			from.push(tmp.pop());
 		}
+		
+		state.setParent(this);
+		state.setTransition("{\"from\": \""+from.getName()+"\", \"num\": \""+num+"\", \"to\": \""+to.getName()+"\"}");
 		return state;
 	}
 	
@@ -168,16 +217,15 @@ public class FcState extends FreeCellModel implements State {
 
 	@Override
 	public Object getHash() {
-		return boardToString();
+		return boardToEqString();
 	}
 
 	@Override
 	public Long getScore() {
-		// TODO Auto-generated method stub
-		return 0L;
+		return getNumberOfCardsInFoundations();
 	}
 	
-	public Long getNumberOfCardsInFoundations() {
+	private Long getNumberOfCardsInFoundations() {
 		Long result = 0L;
 		for (int i = 0; i < foundationStacks.length; i ++) {
 			result += foundationStacks[i].size();
@@ -185,4 +233,22 @@ public class FcState extends FreeCellModel implements State {
 		return result;
 	}
 
+	@Override
+	public void setParent(State parent) {
+		this.parent = (FcState)parent;
+		
+	}
+
+	@Override
+	public State getParent() {
+		return this.parent;
+	}
+	
+	public void setTransition(String transition) {
+		this.transition = transition;
+	}
+	
+	public String getTransition() {
+		return this.transition;
+	}
 }

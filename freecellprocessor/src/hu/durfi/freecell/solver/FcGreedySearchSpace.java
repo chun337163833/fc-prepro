@@ -1,6 +1,7 @@
 package hu.durfi.freecell.solver;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.Stack;
@@ -47,7 +48,7 @@ public class FcGreedySearchSpace implements SearchSpace {
 	@Override
 	public void putState(State state) {
 		FcState fs = (FcState)state;
-		Long score = fs.getNumberOfCardsInFoundations();
+		Long score = fs.getScore();
 		String board = fs.boardToEqString();
 		// If state was already visited, don't add it again.
 		if (visitedStates.contains(board)) {
@@ -61,5 +62,4 @@ public class FcGreedySearchSpace implements SearchSpace {
 		scores.get(score).add(board);
 		states.put(board, fs);
 	}
-
 }

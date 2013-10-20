@@ -11,4 +11,6 @@ public interface State {
 	public List getNextStates();
 	public Object getHash();
 	public Long getScore();
+	public void setParent(State parent);
+	public State getParent();
 }

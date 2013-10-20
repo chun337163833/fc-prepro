@@ -268,7 +268,7 @@ public class FreeCellModel {
 		/*
 		 * Free cells first:
 		 */
-		ArrayList<String> reserves = new ArrayList<>();
+		ArrayList<String> reserves = new ArrayList<String>();
 		for (int i = 0; i < reserveStacks.length; i ++) {
 			if (!reserveStacks[i].isEmpty()) {
 				reserves.add(reserveStacks[i].getCard().toStringVS());
