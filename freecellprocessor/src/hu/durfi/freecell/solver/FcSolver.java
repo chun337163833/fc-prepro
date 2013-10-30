@@ -2,6 +2,7 @@ package hu.durfi.freecell.solver;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.ListIterator;
 import java.util.Vector;
 
@@ -36,52 +37,35 @@ public class FcSolver {
 				"[\"S5\",\"D9\",\"D7\",\"H4\",\"H9\",\"SA\"]," +
 				"[\"H5\",\"C6\",\"D8\",\"S6\",\"HA\",\"D4\"]," +
 				"[\"D10\",\"H6\",\"S3\",\"H7\",\"D6\",\"H2\"]]";
+		String jsonStr9104713 = "[[\"C9\",\"S10\",\"H4\",\"S5\",\"D3\",\"SA\",\"DJ\"],[\"HJ\",\"C4\",\"CQ\",\"HK\",\"DK\",\"D10\",\"D8\"],[\"C2\",\"D5\",\"S4\",\"CK\",\"S8\",\"SQ\",\"S2\"],[\"H7\",\"S6\",\"CA\",\"C5\",\"C6\",\"H5\",\"S3\"],[\"C10\",\"H3\",\"HQ\",\"S9\",\"DA\",\"S7\"],[\"D2\",\"H2\",\"D4\",\"DQ\",\"D7\",\"C3\"],[\"HA\",\"SK\",\"D9\",\"SJ\",\"C7\",\"H6\"],[\"H10\",\"D6\",\"C8\",\"H8\",\"H9\",\"CJ\"]]";
 		JSONParser parser = new JSONParser();
 		JSONArray board = (JSONArray)parser.parse(jsonStr7921427);
 		FcState initialState = new FcState();
 		initialState.createFromJSON(board);
+
+		FcSearchSpace sp = new FcSearchSpace(new FcBreadthFirstStrategy());
+		/*
+		 * Start looking for a solution
+		 */
+		FcState solution = (FcState)sp.search(initialState, 1000);
 		
-		FcState currentState = initialState;
-		FcGreedySearchSpace sp = new FcGreedySearchSpace();
-		long startTime = (new Date()).getTime();
-		for (int i = 0; i < 10000; i ++) {
-			ArrayList<FcState> nextStates = currentState.getNextStates();
-			for (FcState state : nextStates) {
-				sp.putState(state);
+		/*
+		 * If solution was found, print the transitions
+		 */
+		if (solution != null) {
+			List<String> transitions = solution.getTransitions();
+			// Create JSON from the solution, with reversed transitions
+			StringBuffer str = new StringBuffer();
+			str.append("{\"init\":"+jsonStr9104713+", \"moves\": [\n");
+			ListIterator<String> li = transitions.listIterator();
+			while (li.hasNext()) {
+				str.append(li.next()+",\n");
 			}
-			currentState = (FcState)sp.getNextState();
-			System.out.println("Current("+i+") state is: ");
-			System.out.println(currentState.boardToEqString());
-			if (currentState.isWon()) {
-				System.out.println("Game won!\n\n\n\n");
-				
-				// Put the transactions in a list
-				ArrayList<String> transitions = new ArrayList<String>();
-				FcState st = (FcState)currentState;
-				while (st.getParent() != null) {
-					transitions.add(st.getTransition());
-					st = (FcState)st.getParent();
-				}
-				
-				// Create JSON from the solution, with reversed transitions
-				StringBuffer str = new StringBuffer();
-				str.append("{\"init\":"+jsonStr7921427+", \"moves\": [");
-				ListIterator<String> li = transitions.listIterator(transitions.size());
-				while (li.hasPrevious()) {
-					str.append(li.previous()+",\n");
-				}
-				str.setLength(str.length()-2);
-				str.append("]}");
-				
-				System.out.println(str);
-				break;
-			}
+			str.setLength(str.length()-2);
+			str.append("]}");
+	
+			System.out.println(str);
 		}
-		long endTime = (new Date()).getTime();
-		System.out.println("Time spent: " + (endTime - startTime)/1000 + "s");
-		
-		// System.out.println(initialState.boardToEqString());
-		// initialState.getNextStates();
 	}
 
 }

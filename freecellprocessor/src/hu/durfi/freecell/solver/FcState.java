@@ -8,6 +8,7 @@ import hu.durfi.card.ClassicCard;
 import hu.durfi.freecell.FreeCellModel;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Stack;
 import java.util.Vector;
@@ -19,6 +20,11 @@ public class FcState extends FreeCellModel implements State {
 	 * a shorter path.
 	 */
 	private FcState parent;
+	
+	/**
+	 * How deep did this occur in the search tree
+	 */
+	private long depth = 0L;
 	
 	/**
 	 * How did we get here from the parent state? This is the JSON representation
@@ -42,11 +48,16 @@ public class FcState extends FreeCellModel implements State {
 	public FcState(FcState parent) {
 		super();
 		this.parent = parent;
+		this.depth = parent.getDepth() + 1;
 	}
 	
 	@Override
 	public ArrayList<FcState> getNextStates() {
+		// This will hold the results
 		ArrayList<FcState> nextStates = new ArrayList<FcState>();
+		// Keep the equivalent board representations, so the same board
+		// wont show up in next states.
+		HashSet<String> nextBoards = new HashSet<String>();
 		
 		/*
 		 * Moves from the free cells
@@ -63,7 +74,11 @@ public class FcState extends FreeCellModel implements State {
 			for (int j = 0; j < foundationStacks.length; j ++) {
 				FoundationStack to = foundationStacks[j];
 				if (to.isValid(card)) {
-					nextStates.add(afterMove(from, 1, to));
+					FcState next = afterMove(from, 1, to);
+					if (!nextBoards.contains(next.boardToEqString())) {
+						nextBoards.add(next.boardToEqString());
+						nextStates.add(next);
+					}
 				}
 			}
 			/*
@@ -74,7 +89,11 @@ public class FcState extends FreeCellModel implements State {
 				TableauStack dummy = new TableauStack();
 				dummy.push(card);
 				if (to.isValid(dummy)) {
-					nextStates.add(afterMove(from, 1, to));
+					FcState next = afterMove(from, 1, to);
+					if (!nextBoards.contains(next.boardToEqString())) {
+						nextBoards.add(next.boardToEqString());
+						nextStates.add(next);
+					}
 				}
 			}
 		}
@@ -124,7 +143,11 @@ public class FcState extends FreeCellModel implements State {
 							}
 					 }
 					 if (to.isValid(dummy)) {
-						 nextStates.add(afterMove(from, numberOfCardsToMove, to));
+						FcState next = afterMove(from, numberOfCardsToMove, to);
+						if (!nextBoards.contains(next.boardToEqString())) {
+							nextBoards.add(next.boardToEqString());
+							nextStates.add(next);
+						}
 					 }
 				 }
 				 
@@ -141,7 +164,11 @@ public class FcState extends FreeCellModel implements State {
 					 ReserveStack to = reserveStacks[k];
 					 // Checking if empty is enough now
 					 if (to.isEmpty()) {
-						 nextStates.add(afterMove(from, numberOfCardsToMove, to));
+						FcState next = afterMove(from, numberOfCardsToMove, to);
+						if (!nextBoards.contains(next.boardToEqString())) {
+							nextBoards.add(next.boardToEqString());
+							nextStates.add(next);
+						}
 					 }
 				 }
 				 
@@ -151,7 +178,11 @@ public class FcState extends FreeCellModel implements State {
 				 for (int k = 0; k < foundationStacks.length; k ++) {
 					 FoundationStack to = foundationStacks[k];
 					 if (to.isValid(dummy)) {
-						 nextStates.add(afterMove(from, numberOfCardsToMove, to));
+						FcState next = afterMove(from, numberOfCardsToMove, to);
+						if (!nextBoards.contains(next.boardToEqString())) {
+							nextBoards.add(next.boardToEqString());
+							nextStates.add(next);
+						}
 					 }
 				 }
 			}
@@ -184,6 +215,7 @@ public class FcState extends FreeCellModel implements State {
 		}
 		
 		state.setParent(this);
+		state.setDepth(this.getDepth()+1);
 		state.setTransition("{\"from\": \""+from.getName()+"\", \"num\": \""+num+"\", \"to\": \""+to.getName()+"\"}");
 		return state;
 	}
@@ -220,7 +252,6 @@ public class FcState extends FreeCellModel implements State {
 		return boardToEqString();
 	}
 
-	@Override
 	public Long getScore() {
 		return getNumberOfCardsInFoundations();
 	}
@@ -236,19 +267,39 @@ public class FcState extends FreeCellModel implements State {
 	@Override
 	public void setParent(State parent) {
 		this.parent = (FcState)parent;
-		
 	}
 
 	@Override
 	public State getParent() {
 		return this.parent;
 	}
+
+	@Override
+	public void setDepth(long depth) {
+		this.depth = depth;
+	}
 	
+	@Override
+	public long getDepth() {
+		return this.depth;
+	}
+
 	public void setTransition(String transition) {
 		this.transition = transition;
 	}
 	
 	public String getTransition() {
 		return this.transition;
+	}
+	
+	public List<String> getTransitions() {
+		// Put the transactions in a list (backwards)
+		ArrayList<String> transitions = new ArrayList<String>();
+		FcState st = this;
+		while (st.getParent() != null) {
+			transitions.add(0, st.getTransition());
+			st = (FcState)st.getParent();
+		}
+		return transitions;
 	}
 }

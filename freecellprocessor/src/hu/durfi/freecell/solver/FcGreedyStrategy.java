@@ -1,28 +1,23 @@
 package hu.durfi.freecell.solver;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.Stack;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-public class FcGreedySearchSpace implements SearchSpace {
+public class FcGreedyStrategy implements SearchStrategy {
 	/**
 	 * This holds the visited states.
 	 */
-	private TreeSet<String> visitedStates = new TreeSet<String>();
+	protected TreeSet<String> visitedStates = new TreeSet<String>();
 	/**
 	 * Map of states. The key is the (equivalent) string representation
 	 * of the board.
 	 */
-	private TreeMap<String, FcState> states = new TreeMap<String, FcState>();
+	protected TreeMap<String, FcState> states = new TreeMap<String, FcState>();
 	/**
 	 * Map of scores. This structure stores the boards with the score as
 	 * key to make getting the board with the best score faster.
 	 */
-	private TreeMap<Long, TreeSet<String>> scores = new TreeMap<Long, TreeSet<String>>();
+	protected TreeMap<Long, TreeSet<String>> scores = new TreeMap<Long, TreeSet<String>>();
 	
 	/**
 	 * Returns and removes the state with the lowest score in the
@@ -41,6 +36,9 @@ public class FcGreedySearchSpace implements SearchSpace {
 			scores.pollLastEntry();
 		}
 		// Mark this space as visited!
+		if (visitedStates.contains(board)) {
+			System.out.println("ERROR: KETSZER NEZZUK MEG AZ ALLAPOTOT!!!");
+		}
 		visitedStates.add(board);
 		return states.get(board);
 	}
@@ -51,7 +49,8 @@ public class FcGreedySearchSpace implements SearchSpace {
 		Long score = fs.getScore();
 		String board = fs.boardToEqString();
 		// If state was already visited, don't add it again.
-		if (visitedStates.contains(board)) {
+		//if (visitedStates.contains(board)) {
+		if (states.containsKey(board)) {
 			return;
 		}
 		// If this score hasn't occurred before, create list for the states

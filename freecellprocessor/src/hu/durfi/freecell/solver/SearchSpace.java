@@ -10,4 +10,5 @@ package hu.durfi.freecell.solver;
 public interface SearchSpace {
 	public State getNextState();
 	public void putState(State state);
+	public State search(State initialState, long maxRounds);
 }

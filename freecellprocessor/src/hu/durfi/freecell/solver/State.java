@@ -10,7 +10,8 @@ import java.util.List;
 public interface State {
 	public List getNextStates();
 	public Object getHash();
-	public Long getScore();
 	public void setParent(State parent);
 	public State getParent();
+	public void setDepth(long depth);
+	public long getDepth();
 }
