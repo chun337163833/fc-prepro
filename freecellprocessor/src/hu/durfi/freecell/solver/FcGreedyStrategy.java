@@ -9,10 +9,10 @@ public class FcGreedyStrategy implements SearchStrategy {
 	 */
 	protected TreeSet<String> visitedStates = new TreeSet<String>();
 	/**
-	 * Map of states. The key is the (equivalent) string representation
+	 * Map of all seen states. The key is the (equivalent) string representation
 	 * of the board.
 	 */
-	protected TreeMap<String, FcState> states = new TreeMap<String, FcState>();
+	protected TreeMap<String, FcState> notVisitedStates = new TreeMap<String, FcState>();
 	/**
 	 * Map of scores. This structure stores the boards with the score as
 	 * key to make getting the board with the best score faster.
@@ -25,7 +25,8 @@ public class FcGreedyStrategy implements SearchStrategy {
 	 */
 	@Override
 	public State getNextState() {
-		if (states.isEmpty()) {
+		// If there are no states that we haven't seen, return null
+		if (notVisitedStates.isEmpty()) {
 			return null;
 		}
 		// Get entry state with highest score
@@ -40,18 +41,20 @@ public class FcGreedyStrategy implements SearchStrategy {
 			System.out.println("ERROR: KETSZER NEZZUK MEG AZ ALLAPOTOT!!!");
 		}
 		visitedStates.add(board);
-		return states.get(board);
+		return notVisitedStates.remove(board);
 	}
 
 	@Override
-	public void putState(State state) {
+	public boolean putState(State state) {
 		FcState fs = (FcState)state;
 		Long score = fs.getScore();
 		String board = fs.boardToEqString();
-		// If state was already visited, don't add it again.
-		//if (visitedStates.contains(board)) {
-		if (states.containsKey(board)) {
-			return;
+		// In this simple greedy implementation we only store a state,
+		// if we haven't seen it before. A better implementation would check
+		// if getting to this state is better or worse from this parent, than
+		// from the previous.
+		if (notVisitedStates.containsKey(board) || visitedStates.contains(board)) {
+			return false;
 		}
 		// If this score hasn't occurred before, create list for the states
 		// with this score.
@@ -59,6 +62,7 @@ public class FcGreedyStrategy implements SearchStrategy {
 			scores.put(score, new TreeSet<String>());
 		}
 		scores.get(score).add(board);
-		states.put(board, fs);
+		notVisitedStates.put(board, fs);
+		return true;
 	}
 }

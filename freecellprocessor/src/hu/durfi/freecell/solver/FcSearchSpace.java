@@ -48,8 +48,8 @@ public class FcSearchSpace implements SearchSpace {
 		FcState currentState = (FcState)initialState;
 		long startTime = (new Date()).getTime();
 		while (!searchOver) {
-			System.out.println("Checking round "+round+". Depth: "+currentState.getDepth()+", score: "+currentState.getScore()+".");
-			System.out.println(currentState.boardToString());
+			// System.out.println("Checking round "+round+". Depth: "+currentState.getDepth()+", score: "+currentState.getScore()+".");
+			// System.out.println(currentState.boardToString());
 			round ++;
 			if (round >= maxRounds) {
 				searchOver = true;

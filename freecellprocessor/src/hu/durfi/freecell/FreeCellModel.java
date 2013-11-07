@@ -11,6 +11,7 @@ import javax.print.attribute.HashAttributeSet;
 
 import org.json.simple.JSONArray;
 
+import sun.font.CreatedFontTracker;
 import hu.durfi.FreeCell.FoundationStack;
 import hu.durfi.FreeCell.ReserveStack;
 import hu.durfi.FreeCell.TableauStack;
@@ -83,7 +84,28 @@ public class FreeCellModel {
 				tableauStacks[i].add(card);
 			}
 		}
+	}
+	
+	/**
+	 * This returns the tableau stacks as a JSON array. This is useful
+	 * as representing an initial state. The output of this function can
+	 * be given to FcLime in a replay.
+	 * @return JSON Array of tableau stacks. Same format as in
+	 * <code>createFromJSON</code>
+	 * @see createFromJSON
+	 */
+	public JSONArray tableauToJSON() {
+		JSONArray ret = new JSONArray();
 		
+		for (int i = 0; i < tableauStacks.length; i ++) {
+			JSONArray stack = new JSONArray();
+			for (int j = 0; j < tableauStacks[i].size(); j ++) {
+				stack.add(tableauStacks[i].elementAt(j).toString());
+			}
+			ret.add(stack);
+		}
+		
+		return ret;
 	}
 	
 	/**

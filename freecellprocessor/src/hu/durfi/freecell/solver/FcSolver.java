@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Vector;
 
+import javax.xml.datatype.Duration;
+
 import org.json.simple.JSONArray;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -40,32 +42,55 @@ public class FcSolver {
 		String jsonStr9104713 = "[[\"C9\",\"S10\",\"H4\",\"S5\",\"D3\",\"SA\",\"DJ\"],[\"HJ\",\"C4\",\"CQ\",\"HK\",\"DK\",\"D10\",\"D8\"],[\"C2\",\"D5\",\"S4\",\"CK\",\"S8\",\"SQ\",\"S2\"],[\"H7\",\"S6\",\"CA\",\"C5\",\"C6\",\"H5\",\"S3\"],[\"C10\",\"H3\",\"HQ\",\"S9\",\"DA\",\"S7\"],[\"D2\",\"H2\",\"D4\",\"DQ\",\"D7\",\"C3\"],[\"HA\",\"SK\",\"D9\",\"SJ\",\"C7\",\"H6\"],[\"H10\",\"D6\",\"C8\",\"H8\",\"H9\",\"CJ\"]]";
 		JSONParser parser = new JSONParser();
 		JSONArray board = (JSONArray)parser.parse(jsonStr7921427);
-		FcState initialState = new FcState();
-		initialState.createFromJSON(board);
+		// FcState initialState = new FcState();
+		// initialState.createFromJSON(board);
 
-		FcSearchSpace sp = new FcSearchSpace(new FcBreadthFirstStrategy());
 		/*
-		 * Start looking for a solution
+		 * Settings
 		 */
-		FcState solution = (FcState)sp.search(initialState, 1000);
+		int firstSeed = 1;
+		int numberOfGames = 100;
+		int maxStates = 5000;
 		
-		/*
-		 * If solution was found, print the transitions
-		 */
-		if (solution != null) {
-			List<String> transitions = solution.getTransitions();
-			// Create JSON from the solution, with reversed transitions
-			StringBuffer str = new StringBuffer();
-			str.append("{\"init\":"+jsonStr9104713+", \"moves\": [\n");
-			ListIterator<String> li = transitions.listIterator();
-			while (li.hasNext()) {
-				str.append(li.next()+",\n");
+		long startTime = new Date().getTime();
+		int solved = 0;
+		for (int i = firstSeed; i < firstSeed+numberOfGames; i ++) {
+			System.out.println("Solving game "+i+"/"+numberOfGames+"...");
+			/*
+			 * Setup initial state
+			 */
+			FcState initialState = new FcState();
+			initialState.distributeCards(i);
+			String init = initialState.tableauToJSON().toJSONString();
+			
+			/*
+			 * Start looking for a solution
+			 */
+			FcSearchSpace sp = new FcSearchSpace(new FcGreedyStrategy());
+			FcState solution = (FcState)sp.search(initialState, maxStates);
+			
+			/*
+			 * If solution was found, print the transitions
+			 */
+			if (solution != null) {
+				solved++;
+				List<String> transitions = solution.getTransitions();
+				// Create JSON from the solution, with reversed transitions
+				StringBuffer str = new StringBuffer();
+				str.append("{\"init\":"+init+", \"moves\": [\n");
+				ListIterator<String> li = transitions.listIterator();
+				while (li.hasNext()) {
+					str.append(li.next()+",\n");
+				}
+				str.setLength(str.length()-2);
+				str.append("]}");
+		
+				System.out.println(str);
 			}
-			str.setLength(str.length()-2);
-			str.append("]}");
-	
-			System.out.println(str);
 		}
+		long endTime = new Date().getTime();
+		long duration = endTime-startTime;
+		System.out.println("Solved: "+solved+"/"+numberOfGames+" ("+solved/numberOfGames*100+"%) in "+duration/1000+"s.");
 	}
 
 }

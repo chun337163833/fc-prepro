@@ -13,7 +13,7 @@ public class FcBreadthFirstStrategy extends FcGreedyStrategy {
 	
 	@Override
 	public State getNextState() {
-		if (states.isEmpty()) {
+		if (notVisitedStates.isEmpty()) {
 			return null;
 		}
 		// Get entry state with lowest depth
@@ -31,24 +31,26 @@ public class FcBreadthFirstStrategy extends FcGreedyStrategy {
 		}
 		// Mark this space as visited!
 		visitedStates.add(board);
-		return states.get(board);
+		return notVisitedStates.get(board);
 	}
 
 	@Override
-	public void putState(State state) {
+	public boolean putState(State state) {
 		// Do the usual stuff
-		super.putState(state);
-		
-		// Add the depth to the tree
-		FcState fs = (FcState)state;
-		Long depth = fs.getDepth();
-		String board = fs.boardToEqString();
-
-		// If this depth hasn't occurred before, create list for the states
-		// with this depth.
-		if (!depths.containsKey(depth)) {
-			depths.put(depth, new TreeSet<String>());
+		if (super.putState(state)) {
+			// Add the depth to the tree
+			FcState fs = (FcState)state;
+			Long depth = fs.getDepth();
+			String board = fs.boardToEqString();
+	
+			// If this depth hasn't occurred before, create list for the states
+			// with this depth.
+			if (!depths.containsKey(depth)) {
+				depths.put(depth, new TreeSet<String>());
+			}
+			depths.get(depth).add(board);
+			return true;
 		}
-		depths.get(depth).add(board);
+		return false;
 	}
 }
